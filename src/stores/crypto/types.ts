@@ -1,5 +1,22 @@
+import type { ComputedRef, ToRefs } from "vue"
 
-export type TCryptoDefaultStates= {
+
+export interface TCryptoStore {
+  states: ToRefs<TCryptoStoreStates>,
+  isReadyCategories: ComputedRef<boolean>
+  isReadyCurrencies: ComputedRef<boolean>
+  isReadyCryptoList: ComputedRef<boolean>
+  fetchCurrenciesList: () => Promise<void>
+  fetchCategoriesList: () => Promise<void>
+  fetchCryptoList: () => Promise<void>
+  fetchCryptosInfos: (optimizedList: TCryptoData[]) => Promise<void>
+  setCurrencyActive: (currency: string) => void
+  addFavorite: (item: TCryptoData) => void
+  removeFavorite: (item: TCryptoData) => void
+}
+
+
+export type TCryptoStoreStates= {
   cryptoList: Map<string,TCryptoData>
   currenciesList: string[]
   categoriesList: TCategoryData[]

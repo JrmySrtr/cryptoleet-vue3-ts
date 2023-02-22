@@ -1,0 +1,30 @@
+/* The objective of this file is to facilitate lot of things about UI Development. 
+    Reusable on all projects
+*/
+
+:root {
+    --header-height: 50px;
+
+    --text-disabled: #999;
+    
+    --dark-bg-default: #222;
+    --dark-text-default: #fff;
+    
+    --light-bg-default : #fff;
+    --light-text-default : #000;
+}
+
+
+/* themes */
+.dark .text-default { color: var(--dark-text-default); }
+.dark .bg-default { background-color: var(--dark-bg-default); }
+
+.light .text-default { color: var(--light-text-default); } 
+.light .bg-default { background-color: var(--light-bg-default); }
+
+/* text-disabled already exist on vuetify, and cant be override ... */
+.b-text-disabled { color: #999 !important }
+
+
+
+

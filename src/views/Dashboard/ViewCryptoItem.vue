@@ -1,36 +1,28 @@
 <script setup lang="ts">
-import { inject, computed, watch, ref, onMounted } from "vue";
+import { computed, watch, ref, onMounted } from "vue";
 import { BaseCardCrypto, BaseLoader } from "@/app.organizer";
-import { useCryptoStore } from "@/stores/crypto";
+import useCryptoStore from "@/stores/crypto";
 import { useI18n } from "vue-i18n";
-import { TCryptoData } from "@/stores/crypto.types";
-import { IAppProvider } from "@/providers/app";
-import { storeToRefs } from "pinia";
+import { TCryptoData } from "@/stores/crypto/types";
 import { useRouter } from "vue-router";
 import { ROUTE_CRYPTO_OVERVIEW } from "@/app.routes";
 
-
-const App = inject<IAppProvider>("App");
 const router = useRouter();
 
 const id = router.currentRoute.value.params.id as string;
 
 const item = ref<TCryptoData>()
 
-const cryptoStore = useCryptoStore();
-
 const {
-  fetchCryptosInfos
-} = cryptoStore;
-
-const {
-  currencyActive,
-  currenciesList,
-  cryptoList,
+  states: {
+    currencyActive,
+    cryptoList,
+  },
   isReadyCategories,
   isReadyCurrencies,
   isReadyCryptoList,
-} = storeToRefs(cryptoStore);
+  fetchCryptosInfos,
+} = useCryptoStore
 
 const isReadyCryptoStore = computed(
   () => isReadyCategories.value && isReadyCurrencies.value && isReadyCryptoList.value
@@ -42,7 +34,7 @@ watch(isReadyCryptoStore, (newState) => {
   if (newState && id && registerItem()) fetchItemInfos();
 });
 
-watch(currencyActive, (newCrypto) => {
+watch(() => currencyActive.value, () => {
   fetchItemInfos()
 })
 

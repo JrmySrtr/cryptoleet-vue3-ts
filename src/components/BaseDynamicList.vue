@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, DefineComponent, defineExpose, VNodeRef } from "vue";
+import { ref, onMounted, computed, watch, DefineComponent, VNodeRef } from "vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { Spinner } from "@/app.organizer";
 import { TDynamicSort } from "./BaseDynamicSorts.vue";
@@ -143,7 +143,7 @@ defineExpose({
   > 
     <div
       v-if="!orderedList.length"
-      class="flex flex-1 h-full text-4xl font-bold justify-center items-center"
+      class="flex flex-1 h-100 text-4xl font-bold justify-center items-center"
       :style="{ color: props.loaderColor }"
     >
       {{  props.noResultText }}
@@ -164,5 +164,9 @@ defineExpose({
   .scroller {
     scrollbar-color: #687dfa rgba(0,0,0,0.1);
     scrollbar-width: thin;
+    min-height: 10px;
+    overflow-y: scroll;
+    flex: auto;
   }
 </style>
+

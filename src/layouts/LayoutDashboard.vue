@@ -4,11 +4,9 @@ import { DashboardHeader } from "@/app.organizer";
 
 <template>
   <div
-    class="layout-dashboard flex flex-col min-h-screen dark:bg-gray-900 light:bg-white"
+    class="layout-dashboard max-h-100 h-100 d-flex flex-column"
   >
     <DashboardHeader class="fixed w-screen z-50" />
     <slot />
   </div>
 </template>
-
-<style lang="scss"></style>

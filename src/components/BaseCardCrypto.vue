@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { storeToRefs } from "pinia";
-import { TCryptoData } from "@/stores/crypto.types";
-import { useCryptoStore } from "@/stores/crypto";
+import { TCryptoData } from "@/stores/crypto/types";
+import useCryptoStore from "@/stores/crypto";
 import {
   BaseCryptoChart,
   BaseSelectFilter,
@@ -16,12 +15,17 @@ const props = defineProps<{
   data: TCryptoData;
 }>();
 
-const cryptoStore = useCryptoStore();
+const {
+  states: {
+    currencyActive,
+    cryptoFavorites,
+    currenciesList,
+  },
+  setCurrencyActive,
+  addFavorite,
+  removeFavorite,
+} = useCryptoStore;
 
-const { currencyActive, cryptoFavorites, currenciesList } =
-  storeToRefs(cryptoStore);
-
-const { setCurrencyActive, addFavorite, removeFavorite } = cryptoStore;
 
 const crypto = ref(props.data);
 const currencySymbol = computed(() => useCurrencySymbol(currencyActive.value));
@@ -70,9 +74,13 @@ const orderedSparkLabels = computed(() => {
 </script>
 
 <template>
-  <div class="relative mt-20 lg:mt-20 rounded w-full lg:w-5/6 max-w-screen-xl  align-self mx-auto">
+  <div
+    class="relative mt-20 lg:mt-20 rounded w-full lg:w-5/6 max-w-screen-xl align-self mx-auto"
+  >
     <div class="flex grid grid-cols-1 lg:grid-cols-10 w-full">
-      <div class="image flex col-span-2 pl-2 pr-2 items-center a-1 justify-center fadeInLeft">
+      <div
+        class="image flex col-span-2 pl-2 pr-2 items-center a-1 justify-center fadeInLeft"
+      >
         <img
           v-if="crypto.image"
           v-lazy="crypto.image"
@@ -89,8 +97,8 @@ const orderedSparkLabels = computed(() => {
         class="col-span-8 grid grid-cols-1 lg:grid-cols-10 items-center gradient mt-4 lg:mt-0 a-05 fadeInDown rounded-r"
       >
         <div
-          class="flex col-span-10 lg:col-span-2 justify-center lg:justify-start items-center lg:p-2 lg:pr-4  font-bold text-5xl stroke-black a-1 d-600 fadeIn"
-          style="text-stroke: 2px white;"
+          class="flex col-span-10 lg:col-span-2 justify-center lg:justify-start items-center lg:p-2 lg:pr-4 font-bold text-5xl stroke-black a-1 d-600 fadeIn"
+          style="text-stroke: 2px white"
         >
           {{
             crypto.name.length > 35
@@ -98,10 +106,14 @@ const orderedSparkLabels = computed(() => {
               : crypto.name
           }}
         </div>
-        <div class="flex col-span-10 lg:col-span-1 pl-4 pr-4 items-center justify-center lg:justify-start text-gray-400">
+        <div
+          class="flex col-span-10 lg:col-span-1 pl-4 pr-4 items-center justify-center lg:justify-start text-gray-400"
+        >
           [{{ crypto.symbol }}]
         </div>
-        <div class="flex flex-col col-span-10 lg:col-span-3 justify-center lg:justify-start  pl-4 pr-4 text-black">
+        <div
+          class="flex flex-col col-span-10 lg:col-span-3 justify-center lg:justify-start pl-4 pr-4 text-black"
+        >
           <div class="inline text-center lg:text-left">
             <span class="text-sm font-bold">{{ print("current_price") }}</span>
             :
@@ -150,9 +162,13 @@ const orderedSparkLabels = computed(() => {
             <FavoriteStar :active="isInFavorites" class="pr" />
             <span
               class="pl-1 text-xs cursor-pointer"
-              :class="[(isInFavorites ? 'text-gray-400 capitalize' : 'hover:underline')]"
+              :class="[
+                isInFavorites ? 'text-gray-400 capitalize' : 'hover:underline',
+              ]"
             >
-              {{ isInFavorites ? print('favorite') : print('add_to_favorites')}}
+              {{
+                isInFavorites ? print("favorite") : print("add_to_favorites")
+              }}
             </span>
           </div>
         </div>

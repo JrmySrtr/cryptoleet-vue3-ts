@@ -1,0 +1,4 @@
+@use 'vuetify/settings' with (
+  $button-disabled-overlay: 0,
+  $button-pagination-active-overlay-opacity: 0
+);

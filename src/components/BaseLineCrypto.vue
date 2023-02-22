@@ -1,29 +1,29 @@
 <script setup lang="ts">
 import { computed, ref, inject } from "vue";
-import { storeToRefs } from "pinia";
-import { TCryptoData } from "@/stores/crypto.types";
-import { useCryptoStore } from "@/stores/crypto";
-import { BaseCryptoChart, FavoriteStar, Spinner } from "@/app.organizer";
+import { TCryptoData } from "@/stores/crypto/types";
+import useCryptoStore from "@/stores/crypto";
+import { BaseCryptoChart, FavoriteStar } from "@/app.organizer";
 import { useIntersectionObserver } from "@vueuse/core";
 import useCurrencySymbol from "@/composables/useCurrencySymbol";
-
+import { reduceSparkline7days } from "@/stores/crypto/sorters";
 import { ROUTE_CRYPTO_VIEW } from "@/app.routes";
 
 const props = defineProps<{
   data: TCryptoData;
 }>();
 
-const cryptoStore = useCryptoStore();
-
-const { currencyActive, cryptoFavorites } = storeToRefs(cryptoStore);
-const { addFavorite, removeFavorite } = cryptoStore;
+const {
+  states: { currencyActive, cryptoFavorites },
+  addFavorite,
+  removeFavorite,
+} = useCryptoStore;
 
 const crypto = ref(props.data);
 
 const currencySymbol = computed(() => useCurrencySymbol(currencyActive.value));
 
-const chartElement = ref();
-const chartIsVisible = ref(false);
+const refElement = ref();
+const elementIsVisible = ref(false);
 
 const isInFavorites = computed(() =>
   cryptoFavorites.value.get(crypto.value.id) ? true : false
@@ -35,112 +35,144 @@ const toggleFavorite = () => {
   } else addFavorite(crypto.value);
 };
 
-useIntersectionObserver(chartElement, ([{ isIntersecting }]) => {
-  chartIsVisible.value = isIntersecting;
+useIntersectionObserver(refElement, ([{ isIntersecting }]) => {
+  if (isIntersecting !== elementIsVisible.value)
+    elementIsVisible.value = isIntersecting;
 });
 
-const calculatedSparkline = computed(() => {
-  if (!crypto?.value?.sparkline_in_7d?.length) return false;
-
-  const toReduce = crypto.value.sparkline_in_7d;
-
-  const reduced = toReduce.reduce((acc, val, index) => {
-    if (index && index % 23 === 0) acc.push(val);
-    return acc;
-  }, new Array<number>());
-
-  return reduced.length > 3 ? reduced : false;
+const sparkline7Days = computed(() => {
+  if (!crypto?.value?.sparkline_in_7d) return [];
+  return reduceSparkline7days(crypto?.value?.sparkline_in_7d);
 });
 
 const orderedSparkLabels = computed(() => {
-  if (!calculatedSparkline.value) return [];
-  return calculatedSparkline.value.map((_, index: number) => {
-    if (calculatedSparkline.value) {
-      return "J" + (index - calculatedSparkline.value.length);
+  if (!sparkline7Days.value) return [];
+  return sparkline7Days.value.map((_, index: number) => {
+    if (sparkline7Days.value) {
+      return "J" + (index - sparkline7Days.value.length);
     } else return "";
   });
 });
+
 </script>
 
 <template>
-  <div
-    class="line-crypto w-100 block flex flex-1 h-16 mb-1 cursor-pointer"
-    @click="
-      (event) =>
-        $router.push({
-          name: ROUTE_CRYPTO_VIEW.name,
-          params: { id: crypto.id },
-        })
-    "
-  >
-    <div class="flex w-20 pl-2 pr-2 items-center">
-      <img
-        v-if="crypto.image"
-        v-lazy="crypto.image"
-        class="w-8 h-8 border-round rounded-full"
-      />
-      <Spinner v-else color="#DDD" size="small" class="inline-block mx-auto" />
-    </div>
-    <div
-      class="flex w-48 pl-4 pr-4 items-center text-black dark:text-white p-2 font-bold"
+  <div class="line-crypto" ref="refElement">
+    <v-row
+      v-if="elementIsVisible"
+      class="w-full fill-height pa-0 ma-0 cursor-pointer justify-space-between"
+      @click="
+        (event) =>
+          $router.push({
+            name: ROUTE_CRYPTO_VIEW.name,
+            params: { id: crypto.id },
+          })
+      "
     >
-      {{
-        crypto.name.length > 20 ? crypto.name.slice(0, 20) + "..." : crypto.name
-      }}
-    </div>
-    <div class="flex pl-4 pr-4 w-44 items-center text-black dark:text-white">
-      <template
-        v-if="crypto?.pricesByCurrencies[currencyActive]?.current_price"
+      <v-col
+        cols="1"
+        class="ctn-image fill-height pa-0 ma-0 d-flex justify-start align-center pl-2 pr-2 items-center"
       >
-        {{ crypto.pricesByCurrencies[currencyActive].current_price }}
-        {{ currencySymbol }}
-      </template>
-      <div v-else class="text-sm border-1 text-gray-300">N/A</div>
-    </div>
-    <div class="flex pl-4 pr-4 w-36 items-center text-black dark:text-white">
-      <template v-if="crypto?.pricesByCurrencies[currencyActive]?.market_cap">
-        {{ crypto.pricesByCurrencies[currencyActive].market_cap }}
-        {{ currencySymbol }}
-      </template>
-      <div v-else class="text-sm border-1 text-gray-300">N/A</div>
-    </div>
-    <div class="flex pl-4 pr-4 w-40 items-center text-black dark:text-white">
-      <template v-if="crypto?.pricesByCurrencies[currencyActive]?.total_volume">
-        {{ crypto.pricesByCurrencies[currencyActive].total_volume }}
-        {{ currencySymbol }}
-      </template>
-      <div v-else class="text-sm border-1 text-gray-300">N/A</div>
-    </div>
-    <div
-      class="flex flex-1 w-200 items-center text-black dark:text-white pr-3"
-      :ref="(ref) => (chartElement = ref)"
-    >
-      <template v-if="calculatedSparkline && chartIsVisible">
-        <BaseCryptoChart
-          :sparkline="calculatedSparkline"
-          :labels="orderedSparkLabels"
-          :grid="false"
-          :tooltip="false"
-          :win="
-            calculatedSparkline[0] <
-            calculatedSparkline[calculatedSparkline.length - 1]
-          "
-        />
-      </template>
-      <div v-else class="text-sm border-1 text-gray-300">N/A</div>
-    </div>
-    <div
-      class="flex w-14 items-center justify-center pr-3 cursor-pointer"
-      @click.prevent.stop="toggleFavorite"
-    >
-      <FavoriteStar :active="isInFavorites" />
-    </div>
+        <img v-if="crypto.image" v-lazy="crypto.image" class="image" />
+      </v-col>
+      <v-col
+        cols="2"
+        class="fill-height pa-0 ma-0 d-flex justify-start align-center text-default font-bold"
+      >
+        {{
+          crypto.name.length > 20
+            ? crypto.name.slice(0, 20) + "..."
+            : crypto.name
+        }}
+      </v-col>
+      <v-col
+        cols="2"
+        class="fill-height pa-0 ma-0 d-flex justify-start align-center text-default"
+      >
+        <template
+          v-if="crypto?.pricesByCurrencies[currencyActive]?.current_price"
+        >
+          {{ crypto.pricesByCurrencies[currencyActive].current_price }}
+          {{ currencySymbol }}
+        </template>
+        <div
+          v-else
+          class="fill-height pa-0 ma-0 d-flex justify-start align-center text-caption d-text-disabled"
+          style="opacity: 0.4"
+        >
+          N/A
+        </div>
+      </v-col>
+      <v-col
+        cols="2"
+        class="fill-height pa-0 ma-0 d-flex justify-start align-center text-default"
+      >
+        <template v-if="crypto?.pricesByCurrencies[currencyActive]?.market_cap">
+          {{ crypto.pricesByCurrencies[currencyActive].market_cap }}
+          {{ currencySymbol }}
+        </template>
+        <div v-else class="text-caption d-text-disabled" style="opacity: 0.4">
+          N/A
+        </div>
+      </v-col>
+      <v-col
+        cols="2"
+        class="fill-height pa-0 ma-0 d-flex justify-start align-center text-default"
+      >
+        <template
+          v-if="crypto?.pricesByCurrencies[currencyActive]?.total_volume"
+        >
+          {{ crypto.pricesByCurrencies[currencyActive].total_volume }}
+          {{ currencySymbol }}
+        </template>
+        <div v-else class="text-caption d-text-disabled" style="opacity: 0.4">
+          N/A
+        </div>
+      </v-col>
+      <v-col
+        cols="2"
+        class="fill-height pa-0 ma-0 d-flex justify-start align-center text-default"
+      >
+        <template v-if="sparkline7Days">
+          <BaseCryptoChart
+            :sparkline="sparkline7Days"
+            :labels="orderedSparkLabels"
+            :grid="false"
+            :tooltip="false"
+            :win="sparkline7Days[0] < sparkline7Days[sparkline7Days.length - 1]"
+          />
+        </template>
+        <div v-else class="text-caption d-text-disabled" style="opacity: 0.4">
+          -
+        </div>
+      </v-col>
+      <v-col
+        cols="1"
+        class="favorite ill-height pa-0 ma-0 d-flex justify-center align-center cursor-pointer"
+        @click.prevent.stop="toggleFavorite"
+      >
+        <FavoriteStar :active="isInFavorites" />
+      </v-col>
+    </v-row>
   </div>
 </template>
 
 <style lang="scss">
 .line-crypto {
   transition: all 0.2s;
+  height: 40px;
+
+  .ctn-image {
+    max-width: 50px;
+    .image {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  .favorite {
+    max-width: 50px;
+  }
 }
 
 #app.dark {

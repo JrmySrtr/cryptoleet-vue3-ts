@@ -1,4 +1,4 @@
-import { TCryptoData } from "@/stores/crypto.types";
+import { TCryptoData } from "./types";
 
 type TSortCharacter = {
   [key: string]: string;
@@ -46,6 +46,17 @@ export const sorterPrices = (currency: string, index: string) => {
   };
 };
 
+export const reduceSparkline7days = (sparklines: number[]) => {
+  if (!sparklines.length) return false;
+  const toReduce = sparklines;
+  const reduced = toReduce.reduce((acc, val, index) => {
+    if (index && index % 23 === 0) acc.push(val);
+    return acc;
+  }, new Array<number>());
+
+  return reduced.length > 3 ? reduced : false;
+}
+
 export const sorterSparkline7days = (currency: string, index: string) => {
   return (a: TCryptoData, b: TCryptoData): number => {
     let A: any = a?.sparkline_in_7d
@@ -61,6 +72,9 @@ export const sorterSparkline7days = (currency: string, index: string) => {
 
       if (ALength && !BLength) return -1;
       else if (!ALength && BLength) return 1;
+
+      A = reduceSparkline7days(A);
+      B = reduceSparkline7days(B);
 
       const Awin = isWinning(A);
       const Bwin = isWinning(B);

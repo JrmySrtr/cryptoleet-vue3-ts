@@ -2,6 +2,11 @@
 
 #coingecko.com LIMITED API
 
-> npm install
 
-> npm run dev
+**Native Store + CSS/SCSS + Vuetify**
+
+#Installation
+
+npm install
+
+npm run dev

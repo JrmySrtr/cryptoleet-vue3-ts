@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { IAppProvider } from "@/providers/app";
+import useThemesProvider from "@/providers/themes.provider";
 import { computed, inject } from "vue";
 
 const props = defineProps<{
   active: boolean;
 }>();
 
-const App = inject<IAppProvider>("App");
-
-
+const Themes = useThemesProvider();
 
 const getImageSource = computed(() => {
   try {
@@ -16,7 +14,7 @@ const getImageSource = computed(() => {
     if (props.active) file += "full";
     if (!props.active) {
       file +=
-        App?.theme.value === "dark" ? "empty-dark" : "empty-light";
+        Themes.current.value === "dark" ? "empty-dark" : "empty-light";
     }
     return new URL(`../assets/img/${file}.png`, import.meta.url).href;
   } catch (e) {

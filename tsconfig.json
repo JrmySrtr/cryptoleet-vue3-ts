@@ -13,7 +13,11 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@design": ["./src/assets/css/design.css"],
+      "@themes": ["./src/assets/css/themes.css"],
+      "@elements": ["./src/assets/css/elements/"],
+      "@animate": ["./src/assets/css/animate.css"],
     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],

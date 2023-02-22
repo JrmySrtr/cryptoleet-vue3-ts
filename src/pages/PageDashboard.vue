@@ -5,7 +5,7 @@ import { useMeta } from "vue-meta";
 import { LayoutDashboard, ViewCryptoList, BaseLineCrypto } from "../app.organizer";
 
 import { ROUTE_CRYPTO_OVERVIEW, ROUTE_CRYPTO_FAVORITES } from "../app.routes";
-import { useCryptoStore } from "@/stores/crypto";
+import useCryptoStore from "@/stores/crypto";
 import { useI18n } from "vue-i18n";
 
 useMeta({
@@ -24,14 +24,16 @@ const routeIsFavorites = computed(
 const { t: print } = useI18n();
 
 const {
-  cryptoList,
-  cryptoFavorites,
-} = useCryptoStore();
+  states: {
+    cryptoList,
+    cryptoFavorites,
+  }
+} = useCryptoStore;
 
 const viewProps = computed(() => {
   return {
-    title: routeIsHome.value ? print('cryptocurrency_prices') : print('cryptocurrency_favorites'),
-    cryptoList: routeIsHome.value ? cryptoList : cryptoFavorites,
+    title: routeIsHome.value ? print('market_prices') : print('cryptocurrency_favorites'),
+    cryptoList: routeIsHome.value ? cryptoList.value : cryptoFavorites.value,
     component: BaseLineCrypto,
   }
 })
@@ -43,9 +45,8 @@ const viewProps = computed(() => {
     <ViewCryptoList
       v-if="routeIsHome || routeIsFavorites"
       v-bind="viewProps"
+      class="spaced-header h-screen max-w-80r"
     />
-    <router-view v-else />
+    <router-view class="spaced-header h-screen" v-else />
   </LayoutDashboard>
 </template>
-
-<style lang="scss"></style>
